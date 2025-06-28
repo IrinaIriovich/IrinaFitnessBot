@@ -17,7 +17,7 @@ async def setup_jobqueue(app):
     # Расписание утреннего сообщения
     app.job_queue.run_daily(
         auto_what_was_message,
-        time=dt_time(hour=14, minute=19),
+        time=dt_time(hour=14, minute=26),
         name="auto_what_was"
     )
 
@@ -27,7 +27,7 @@ async def setup_jobqueue(app):
         schedule_inspiration_job(app.job_queue)
     app.job_queue.run_daily(
         auto_what_was_message,
-        time=dt_time(hour=14, minute=10),
+        time=dt_time(hour=14, minute=24),
         name="auto_what_was"
     )
     print(f"[DEBUG] app.job_queue is available: {hasattr(app, 'job_queue') and app.job_queue is not None}")
@@ -377,7 +377,7 @@ from telegram.ext import ApplicationBuilder, JobQueue
 
 def main():
     application = Application.builder()\
-        .token("7820484983:AAEqhgL9kMfMpw5p98RkWseM4w0JoEBvKcw")\
+        .token("7820484983:AAHbJadgM6XzpzAGuaCSzD_fSC9SVidmYWA")\
         .post_init(setup_jobqueue)\
         .build()
     
