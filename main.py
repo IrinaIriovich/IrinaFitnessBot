@@ -249,7 +249,7 @@ async def handle_message(update: Update, context: CallbackContext):
     text = update.message.text
     user_id = update.effective_user.id
     date_str = datetime.now().strftime("%Y-%m-%d")
-    elif text == "❓ Что было":
+    if text == "❓ Что было":
         workout = get_daily_workout()
         if workout:
             formatted = format_workout_with_guides(workout)
