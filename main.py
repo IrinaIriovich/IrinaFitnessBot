@@ -355,9 +355,7 @@ async def auto_what_was_message(context: CallbackContext):
             context.user_data["date"] = datetime.now().strftime("%Y-%m-%d")
             context.user_data["type"] = "плановая"
 from telegram.ext import ApplicationBuilder, JobQueue
-async def setup_jobqueue(app):
-    if not hasattr(app, "job_queue") or app.job_queue is None:
-        app.job_queue = app._job_queue
+
 def main():
     application = Application.builder()\
         .token("7820484983:AAEqhgL9kMfMpw5p98RkWseM4w0JoEBvKcw")\
