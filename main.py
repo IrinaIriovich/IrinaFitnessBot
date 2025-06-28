@@ -375,6 +375,8 @@ def main():
         name="auto_what_was"
     )
     application.run_polling()
+import asyncio
+
 if __name__ == "__main__":
     keep_alive()
-    main()
+    asyncio.run(main())
