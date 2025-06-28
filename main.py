@@ -7,7 +7,7 @@ async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
     phrase = random.choice(inspiration_phrases)
     await context.bot.send_message(chat_id=191224401, text=f"✨ {phrase}")
 # 🧩 Убедимся, что job_queue инициализирован
-def setup_jobqueue(app):
+async def setup_jobqueue(app):
     if not hasattr(app, "job_queue") or app.job_queue is None:
         print("[ERROR] job_queue is not available.")
         return
@@ -390,4 +390,4 @@ import asyncio
 
 if __name__ == "__main__":
     keep_alive()
-    asyncio.run(main())
+    main()
