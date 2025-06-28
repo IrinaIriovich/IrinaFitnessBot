@@ -261,7 +261,7 @@ async def handle_message(update: Update, context: CallbackContext):
             context.user_data["date"] = date_str
             context.user_data["type"] = "плановая"
     elif text == "📅 Расписание":
-            schedule = "📅 Расписание на неделю:"
+        schedule = "📅 Расписание на неделю:"
         days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
         emoji_list = ["🏃‍♂️", "🧑‍🏫", "🏋️‍♀️", "🧘‍♀️", "🤸‍♂️", "🧘‍♂️", "😌"]
         for i in range(7):
