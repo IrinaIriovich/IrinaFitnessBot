@@ -1,4 +1,4 @@
-
+from keep_alive import keep_alive
 from telegram.ext import ContextTypes
 from datetime import datetime, timedelta, timezone, time as dt_time
 import random
@@ -389,4 +389,5 @@ def main():
 import asyncio
 
 if __name__ == "__main__":
+    keep_alive()
     main()
