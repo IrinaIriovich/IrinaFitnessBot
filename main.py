@@ -28,12 +28,10 @@ def schedule_inspiration_job(application):
     )
 # main.py
 import logging
-import random
 from datetime import datetime, time
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackContext, MessageHandler, filters, CallbackQueryHandler
 import requests
-import asyncio
 # Ссылка на рабочий Web Apps скрипт Google Apps Script
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBWSJgOMLcLqHD6DsC9LKjRxtdjsSUvr_r-VFCx1Pxu9ZX7a93ZDwoBDTqtGi3bPeJ/exec"
 # Включаем логирование
@@ -364,7 +362,6 @@ def main():
         .build()
     
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
         # ⏰ Задача на 9:45 по Москве (6:45 UTC)
