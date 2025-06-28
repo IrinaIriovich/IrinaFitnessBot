@@ -11,6 +11,11 @@ def setup_jobqueue(app):
     if not hasattr(app, "job_queue") or app.job_queue is None:
         app.job_queue = app._job_queue
         schedule_inspiration_job(app)
+    app.job_queue.run_daily(
+        auto_what_was_message,
+        time=dt_time(hour=8, minute=30),
+        name="auto_what_was"
+    )
 # ⏰ Планировщик с рандомным временем (10:00–23:00) по Москве
 def schedule_inspiration_job(application):
     # Случайное время между 10:00 и 23:00
