@@ -379,7 +379,7 @@ import asyncio
 
 async def main():
     application = Application.builder()\
-        .token("ТВОЙ_НОВЫЙ_ТОКЕН")\
+        .token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
         .post_init(setup_jobqueue)\
         .build()
 
