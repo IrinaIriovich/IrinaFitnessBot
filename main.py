@@ -10,6 +10,7 @@ async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
 def setup_jobqueue(app):
     if not hasattr(app, "job_queue") or app.job_queue is None:
         app.job_queue = app._job_queue
+        schedule_inspiration_job(app)
 # ⏰ Планировщик с рандомным временем (10:00–23:00) по Москве
 def schedule_inspiration_job(application):
     # Случайное время между 10:00 и 23:00
@@ -361,7 +362,7 @@ def main():
         .token("7820484983:AAEqhgL9kMfMpw5p98RkWseM4w0JoEBvKcw")\
         .post_init(setup_jobqueue)\
         .build()
-    schedule_inspiration_job(application)
+    
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
