@@ -375,19 +375,38 @@ async def auto_what_was_message(context: CallbackContext):
             context.user_data["type"] = "плановая"
 from telegram.ext import ApplicationBuilder, JobQueue
 
-def main():
+import asyncio
+
+async def main():
     application = Application.builder()\
-        .token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
+        .token("ТВОЙ_НОВЫЙ_ТОКЕН")\
         .post_init(setup_jobqueue)\
         .build()
-    
+
+    # 💥 Эта строка решает конфликт с другим экземпляром
+    await application.bot.delete_webhook(drop_pending_updates=True)
+
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
-        
-    application.run_polling(close_loop=False)
-import asyncio
+
+    await application.run_polling(close_loop=False)
 
 if __name__ == "__main__":
-    keep_alive()
-    main()
+    asyncio.run(main())
+#def main():
+    #application = Application.builder()\
+        #.token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
+        #.post_init(setup_jobqueue)\
+        #.build()
+    
+    #application.add_handler(CommandHandler("start", start))
+    #application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    #application.add_handler(CallbackQueryHandler(handle_callback))
+        
+    #application.run_polling(close_loop=False)
+#import asyncio
+
+#if __name__ == "__main__":
+    #keep_alive()
+    #main()
