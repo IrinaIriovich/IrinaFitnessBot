@@ -9,6 +9,21 @@ async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
 # 🧩 Убедимся, что job_queue инициализирован
 def setup_jobqueue(app):
     if not hasattr(app, "job_queue") or app.job_queue is None:
+        print("[ERROR] job_queue is not available.")
+        return
+
+    print(f"[DEBUG] job_queue initialized: {app.job_queue is not None}")
+
+    # Расписание утреннего сообщения
+    app.job_queue.run_daily(
+        auto_what_was_message,
+        time=dt_time(hour=8, minute=30),
+        name="auto_what_was"
+    )
+
+    # Расписание вдохновляющего сообщения
+    schedule_inspiration_job(app)
+    if not hasattr(app, "job_queue") or app.job_queue is None:
         schedule_inspiration_job(app.job_queue)
     app.job_queue.run_daily(
         auto_what_was_message,
