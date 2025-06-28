@@ -10,7 +10,7 @@ async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
 def setup_jobqueue(app):
     if not hasattr(app, "job_queue") or app.job_queue is None:
         app.job_queue = app._job_queue
-        schedule_inspiration_job(app)
+        schedule_inspiration_job(app.job_queue)
     app.job_queue.run_daily(
         auto_what_was_message,
         time=dt_time(hour=8, minute=30),
@@ -369,12 +369,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
-        # ⏰ Задача на 9:45 по Москве (6:45 UTC)
-    application.job_queue.run_daily(
-        auto_what_was_message,
-        time=dt_time(hour=8, minute=30),
-        name="auto_what_was"
-    )
+        
     application.run_polling()
 import asyncio
 
