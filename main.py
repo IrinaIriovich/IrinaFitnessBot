@@ -15,7 +15,7 @@ async def webhook():
     from telegram import Update
     global application
     json_data = request.get_json(force=True)
-    update = Update.de_json(data=json_data, bot=application.bot)
+    update = Update.de_json(json_data, application.bot)
     await application.process_update(update)
     return "ok"
 
