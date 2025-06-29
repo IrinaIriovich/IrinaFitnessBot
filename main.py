@@ -411,12 +411,17 @@ from telegram.ext import ApplicationBuilder, JobQueue
 
 async def main():
     global application
-    application = Application.builder()\
-        .token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
-        .post_init(setup_jobqueue)\
-        .build()
-    
-    print(f"[DEBUG] Bot initialized: {application.bot}")
+    application = ApplicationBuilder().token(TOKEN).build()
+
+    await application.initialize()
+    await application.start()
+
+    # Запускаем Flask только после старта application
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.start()
+
+    await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
+    print("[INIT] Бот готов, webhook установлен")
 
     # 💥 Эта строка решает конфликт с другим экземпляром
     #await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
@@ -430,34 +435,17 @@ if __name__ == "__main__":
     nest_asyncio.apply()
 
     import asyncio
+    asyncio.run(main())
     import threading
 
     # Запускаем Flask-сервер
     def run_flask():
         import time
-        import asyncio  # 👈 Добавляем
 
         while not application or not getattr(application, 'bot', None):
             print("[WAIT] Waiting for application to be ready...")
 
         print("[OK] Starting Flask server.")
         app.run(host="0.0.0.0", port=10000)
-
-    # 💥 Устанавливаем webhook ТОЛЬКО ПОСЛЕ запуска Flask
-    async def start_bot():
-        global application
-        await main()
-
-        await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
-        print("[OK] Webhook установлен")
-
-    # Flask запускаем только после полной инициализации application
-        flask_thread = threading.Thread(target=run_flask)
-        flask_thread.start()
     
-    import nest_asyncio
-    nest_asyncio.apply()
 
-    import asyncio
-    asyncio.run(start_bot())
-    
