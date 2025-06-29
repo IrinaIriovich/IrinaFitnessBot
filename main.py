@@ -435,7 +435,7 @@ if __name__ == "__main__":
             print("[WAIT] Waiting for application and bot...")
             time.sleep(1)
         print("[OK] Starting Flask server.")
-        app.run(host="0.0.0.0", port=10000)
+        app.run(host="0.0.0.0", port=10000, debug=True)
 
     asyncio.run(main())
     run_flask()
