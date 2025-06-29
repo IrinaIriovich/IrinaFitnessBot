@@ -390,7 +390,7 @@ import asyncio
 
 if __name__ == "__main__":
     keep_alive()
-    application.run_polling()
+    app.run_polling()
     
 #if __name__ == "__main__":
  #   keep_alive()
