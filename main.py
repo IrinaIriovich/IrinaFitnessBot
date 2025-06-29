@@ -435,12 +435,11 @@ if __name__ == "__main__":
     # Запускаем Flask-сервер
     def run_flask():
         import time
-    # Ждём не только появления application, но и его .bot
         while not application or not getattr(application, "bot", None):
             print("[WAIT] Waiting for application and bot...")
             time.sleep(1)
-            print("[OK] Starting Flask server.")
-            app.run(host="0.0.0.0", port=10000)
+        print("[OK] Starting Flask server.")
+        app.run(host="0.0.0.0", port=10000)
     
     threading.Thread(target=run_bot).start()
     run_flask()
