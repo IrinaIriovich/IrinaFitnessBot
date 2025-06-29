@@ -17,6 +17,10 @@ def webhook():
     global application
     if request.method == "POST":
         json_data = request.get_json(force=True)
+        if not application or not getattr(application, "bot", None):
+            print("[ERROR] Application или bot ещё не готовы.")
+            return "bot not ready", 503
+            
         if json_data is None:
             return "no data", 400
         try:
