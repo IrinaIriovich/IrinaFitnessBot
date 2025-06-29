@@ -377,7 +377,7 @@ from telegram.ext import ApplicationBuilder, JobQueue
 
 def main():
     application = Application.builder()\
-        .token("7820484983:7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
+        .token("7820484983:AAFy1bXpU8Zx0tvJCtOhgaIeYRKI6YL9WCg")\
         .post_init(setup_jobqueue)\
         .build()
     
