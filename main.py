@@ -13,7 +13,8 @@ def home():
 
 @app.post("/webhook")
 async def webhook():
-    update = Update.de_json(request.get_json(force=True))
+    json_data = request.get_json(force=True)
+    update = Update.de_json(data=json_data, bot=application.bot)
     await application.process_update(update)
     return "ok"
 
