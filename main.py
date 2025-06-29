@@ -13,7 +13,11 @@ def home():
     return "OK"
 
 @app.route('/webhook', methods=['POST'])
+@app.route("/webhook", methods=["POST"])
 def webhook():
+    print("🔔 Пришёл запрос от Telegram")
+    print("🔸 Headers:", request.headers)
+    print("🔸 Body:", request.get_json())
     global application
     if request.method == "POST":
         json_data = request.get_json(force=True)
