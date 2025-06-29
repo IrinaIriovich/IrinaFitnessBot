@@ -5,7 +5,6 @@ from flask import Flask, request
 from telegram import Update
 
 app = Flask(__name__)
-application = None  # Объявим глобально
 
 @app.route("/")
 def home():
@@ -13,6 +12,8 @@ def home():
 
 @app.post("/webhook")
 async def webhook():
+    from telegram import Update
+    global application
     json_data = request.get_json(force=True)
     update = Update.de_json(data=json_data, bot=application.bot)
     await application.process_update(update)
@@ -397,6 +398,8 @@ async def main():
         .token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
         .post_init(setup_jobqueue)\
         .build()
+    
+    print(f"[DEBUG] Bot initialized: {application.bot}")
 
     # 💥 Эта строка решает конфликт с другим экземпляром
     await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
@@ -405,27 +408,9 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
 
-    #await application.run_polling(close_loop=False)
-
 if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
     import asyncio
     asyncio.run(main())
     
-#def main():
-    #application = Application.builder()\
-        #.token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
-        #.post_init(setup_jobqueue)\
-        #.build()
-    
-    #application.add_handler(CommandHandler("start", start))
-    #application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    #application.add_handler(CallbackQueryHandler(handle_callback))
-        
-    #application.run_polling(close_loop=False)
-#import asyncio
-
-#if __name__ == "__main__":
-    #keep_alive()
-    #main()
