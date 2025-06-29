@@ -441,8 +441,17 @@ if __name__ == "__main__":
         app.run(host="0.0.0.0", port=10000)
 
     # 💥 Устанавливаем webhook ТОЛЬКО ПОСЛЕ запуска Flask
-    asyncio.run(application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook"))
-    
-    asyncio.run(main())
-    run_flask()
+    async def start_bot():
+        global application
+        await main()
+        await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
+
+        flask_thread = threading.Thread(target=run_flask)
+        flask_thread.start()
+
+    import nest_asyncio
+    nest_asyncio.apply()
+
+    import asyncio
+    asyncio.run(start_bot())
     
