@@ -447,7 +447,7 @@ if __name__ == "__main__":
         flask_thread = threading.Thread(target=run_flask)
         flask_thread.start()
 
-await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
+        await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
 
     import nest_asyncio
     nest_asyncio.apply()
