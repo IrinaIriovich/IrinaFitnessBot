@@ -10,14 +10,20 @@ app = Flask(__name__)
 def home():
     return "OK"
 
-@app.post("/webhook")
-async def webhook():
-    from telegram import Update
-    global application
-    json_data = request.get_json(force=True)
-    update = Update.de_json(json_data, application.bot)
-    await application.process_update(update)
-    return "ok"
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    if request.method == "POST":
+        json_data = request.get_json(force=True)
+        if json_data is None:
+            return "no data", 400
+        try:
+            update = Update.de_json(json_data, application.bot)
+            application.update_queue.put(update)
+        except Exception as e:
+            print(f"[ERROR] Failed to process update: {e}")
+            return "error", 500
+        return "ok", 200
+    return "not allowed", 405
 
 # 💬 Функция отправки вдохновения
 async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
