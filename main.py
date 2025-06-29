@@ -417,6 +417,18 @@ async def main():
 if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
+
     import asyncio
-    asyncio.run(main())
+    import threading
+
+    # Запускаем Telegram-бота в отдельной асинхронной задаче
+    def run_bot():
+        asyncio.run(main())
+
+    # Запускаем Flask-сервер
+    def run_flask():
+        app.run(host="0.0.0.0", port=10000)
+
+    threading.Thread(target=run_bot).start()
+    run_flask()
     
