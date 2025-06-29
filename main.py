@@ -409,43 +409,36 @@ async def auto_what_was_message(context: CallbackContext):
             context.user_data["type"] = "плановая"
 from telegram.ext import ApplicationBuilder, JobQueue
 
+import asyncio
+import threading
+
+def run_flask():
+    import time
+    while not application or not getattr(application, 'bot', None):
+        print("[WAIT] Ждём, когда application.bot будет готов...")
+        time.sleep(1)
+    app.run(host="0.0.0.0", port=10000)
+
 async def main():
     global application
-    application = ApplicationBuilder().token(TOKEN).build()
+    application = Application.builder()\
+        .token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
+        .post_init(setup_jobqueue)\
+        .build()
 
     await application.initialize()
     await application.start()
-
-    # Запускаем Flask только после старта application
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.start()
-
     await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
-    print("[INIT] Бот готов, webhook установлен")
-
-    # 💥 Эта строка решает конфликт с другим экземпляром
-    #await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
 
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.start()
+
 if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
 
-    import asyncio
     asyncio.run(main())
-    import threading
-
-    # Запускаем Flask-сервер
-    def run_flask():
-        import time
-
-        while not application or not getattr(application, 'bot', None):
-            print("[WAIT] Waiting for application to be ready...")
-
-        print("[OK] Starting Flask server.")
-        app.run(host="0.0.0.0", port=10000)
-    
-
