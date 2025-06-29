@@ -390,8 +390,6 @@ async def auto_what_was_message(context: CallbackContext):
             context.user_data["type"] = "плановая"
 from telegram.ext import ApplicationBuilder, JobQueue
 
-import asyncio
-
 async def main():
     global application
     application = Application.builder()\
@@ -406,10 +404,13 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
 
-    await application.run_polling(close_loop=False)
+    #await application.run_polling(close_loop=False)
 
 if __name__ == "__main__":
     import nest_asyncio
+    nest_asyncio.apply()
+    import asyncio
+    asyncio.run(main())
     
 #def main():
     #application = Application.builder()\
