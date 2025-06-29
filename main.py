@@ -6,6 +6,8 @@ from telegram import Update
 
 app = Flask(__name__)
 
+application = None
+
 @app.route("/")
 def home():
     return "OK"
@@ -428,7 +430,12 @@ if __name__ == "__main__":
 
     # Запускаем Flask-сервер
     def run_flask():
-        app.run(host="0.0.0.0", port=10000)
+    import time
+    while not application:
+        print("[WAIT] Waiting for application to be ready...")
+        time.sleep(1)
+    print("[OK] Starting Flask server.")
+    app.run(host="0.0.0.0", port=10000)
 
     threading.Thread(target=run_bot).start()
     run_flask()
