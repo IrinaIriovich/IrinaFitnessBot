@@ -428,10 +428,6 @@ if __name__ == "__main__":
     import asyncio
     import threading
 
-    # Запускаем Telegram-бота в отдельной асинхронной задаче
-    def run_bot():
-        asyncio.run(main())
-
     # Запускаем Flask-сервер
     def run_flask():
         import time
@@ -440,7 +436,7 @@ if __name__ == "__main__":
             time.sleep(1)
         print("[OK] Starting Flask server.")
         app.run(host="0.0.0.0", port=10000)
-    
-    threading.Thread(target=run_bot).start()
+
+    asyncio.run(main())
     run_flask()
     
