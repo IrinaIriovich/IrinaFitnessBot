@@ -12,7 +12,6 @@ application = None
 def home():
     return "OK"
 
-@app.route('/webhook', methods=['POST'])
 @app.route("/webhook", methods=["POST"])
 def webhook():
     print("🔔 Пришёл запрос от Telegram")
@@ -442,7 +441,8 @@ if __name__ == "__main__":
     import asyncio
     nest_asyncio.apply()
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    run_flask()
-    loop.run_forever()
+    async def start_all():
+        await main()
+        run_flask()  # теперь запускается после application.start()
+
+    asyncio.run(start_all())
