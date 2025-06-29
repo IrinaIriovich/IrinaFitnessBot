@@ -29,7 +29,7 @@ def webhook():
             return "no data", 400
         try:
             update = Update.de_json(json_data, application.bot)
-            application.update_queue.put(update)
+            asyncio.run(application.update_queue.put(update))
         except Exception as e:
             print(f"[ERROR] Failed to process update: {e}")
             return "error", 500
@@ -448,11 +448,13 @@ if __name__ == "__main__":
         global application
         await main()
 
+        await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
+        print("[OK] Webhook установлен")
+
+    # Flask запускаем только после полной инициализации application
         flask_thread = threading.Thread(target=run_flask)
         flask_thread.start()
-
-        await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
-
+    
     import nest_asyncio
     nest_asyncio.apply()
 
