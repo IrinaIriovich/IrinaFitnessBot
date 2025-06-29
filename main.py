@@ -435,7 +435,6 @@ if __name__ == "__main__":
 
         while not application or not getattr(application, 'bot', None):
             print("[WAIT] Waiting for application to be ready...")
-        time.sleep(1)
 
         print("[OK] Starting Flask server.")
         app.run(host="0.0.0.0", port=10000)
@@ -444,10 +443,11 @@ if __name__ == "__main__":
     async def start_bot():
         global application
         await main()
-        await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
 
         flask_thread = threading.Thread(target=run_flask)
         flask_thread.start()
+
+await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
 
     import nest_asyncio
     nest_asyncio.apply()
