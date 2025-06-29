@@ -2,6 +2,18 @@ from keep_alive import keep_alive
 from telegram.ext import ContextTypes
 from datetime import datetime, timedelta, timezone, time as dt_time
 import random
+from flask import Flask, request
+from telegram import Update
+
+app = Flask(__name__)
+application = None  # Объявим глобально
+
+@app.post("/webhook")
+async def webhook():
+    update = Update.de_json(request.get_json(force=True))
+    await application.process_update(update)
+    return "ok"
+
 # 💬 Функция отправки вдохновения
 async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
     phrase = random.choice(inspiration_phrases)
@@ -378,13 +390,14 @@ from telegram.ext import ApplicationBuilder, JobQueue
 import asyncio
 
 async def main():
+    global application
     application = Application.builder()\
         .token("7820484983:AAECgwo0IlJaChQpoUOeKsIx-DQvTTuKOyo")\
         .post_init(setup_jobqueue)\
         .build()
 
     # 💥 Эта строка решает конфликт с другим экземпляром
-    await application.bot.delete_webhook(drop_pending_updates=True)
+    await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -394,9 +407,6 @@ async def main():
 
 if __name__ == "__main__":
     import nest_asyncio
-    nest_asyncio.apply()
-    import asyncio
-    asyncio.get_event_loop().run_until_complete(main())
     
 #def main():
     #application = Application.builder()\
