@@ -415,7 +415,7 @@ async def main():
     print(f"[DEBUG] Bot initialized: {application.bot}")
 
     # 💥 Эта строка решает конфликт с другим экземпляром
-    await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
+    #await application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook")
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -431,12 +431,18 @@ if __name__ == "__main__":
     # Запускаем Flask-сервер
     def run_flask():
         import time
-        while not application or not getattr(application, "bot", None):
-            print("[WAIT] Waiting for application and bot...")
-            time.sleep(1)
-        print("[OK] Starting Flask server.")
-        app.run(host="0.0.0.0", port=10000, debug=True)
+        import asyncio  # 👈 Добавляем
 
+        while not application or not getattr(application, 'bot', None):
+            print("[WAIT] Waiting for application to be ready...")
+        time.sleep(1)
+
+        print("[OK] Starting Flask server.")
+        app.run(host="0.0.0.0", port=10000)
+
+    # 💥 Устанавливаем webhook ТОЛЬКО ПОСЛЕ запуска Flask
+    asyncio.run(application.bot.set_webhook("https://irinafitnessbot.onrender.com/webhook"))
+    
     asyncio.run(main())
     run_flask()
     
