@@ -7,6 +7,10 @@ from telegram import Update
 app = Flask(__name__)
 application = None  # Объявим глобально
 
+@app.route("/")
+def home():
+    return "OK"
+
 @app.post("/webhook")
 async def webhook():
     update = Update.de_json(request.get_json(force=True))
