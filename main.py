@@ -12,7 +12,7 @@ def home():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-global application
+    global application
     if request.method == "POST":
         json_data = request.get_json(force=True)
         if json_data is None:
