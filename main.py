@@ -14,38 +14,40 @@ async def setup_jobqueue(app):
 
     print(f"[DEBUG] job_queue initialized: {app.job_queue is not None}")
 
-    # Расписание утреннего сообщения
-    app.job_queue.run_daily(
-        auto_what_was_message,
-        time=dt_time(hour=14, minute=26),
-        name="auto_what_was"
-    )
+    #schedule_inspiration_job(app)
+    from pytz import timezone
+    moscow_tz = timezone("Europe/Moscow")
 
-    # Расписание вдохновляющего сообщения
-    schedule_inspiration_job(app)
-    if not hasattr(app, "job_queue") or app.job_queue is None:
-        schedule_inspiration_job(app.job_queue)
     app.job_queue.run_daily(
         auto_what_was_message,
-        time=dt_time(hour=14, minute=24),
+        time=dt_time(hour=9, minute=30, tzinfo=moscow_tz),
         name="auto_what_was"
     )
     print(f"[DEBUG] app.job_queue is available: {hasattr(app, 'job_queue') and app.job_queue is not None}")
+
 # ⏰ Планировщик с рандомным временем (10:00–23:00) по Москве
-def schedule_inspiration_job(application):
-    # Случайное время между 10:00 и 23:00
+from pytz import timezone
+
+def schedule_next_inspiration(application):
+    tz = timezone("Europe/Moscow")
+    now = datetime.now(tz)
     hour = random.randint(10, 22)
-    minute = random.randint(1, 59)
-    moscow_now = datetime.now(timezone.utc) + timedelta(hours=0)
-    scheduled_time = moscow_now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if scheduled_time < moscow_now:
-        scheduled_time += timedelta(days=1)
-        print(f"Планирую вдохновение на {scheduled_time.strftime('%H:%M')} по Москве")
-    application.job_queue.run_daily(
-        send_random_inspiration,
-        time=scheduled_time.time(),
-        name="daily_inspiration"
-    )
+    minute = random.randint(0, 59)
+    next_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if next_time < now:
+        next_time += timedelta(days=1)
+
+    delay = (next_time - now).total_seconds()
+    print(f"[✔] Следующая мотивация будет отправлена в {next_time.strftime('%H:%M')} по Москве")
+    application.job_queue.run_once(send_random_inspiration, when=delay)
+
+async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
+    phrase = random.choice(inspiration_phrases)
+    for user_id in context.bot_data.get("users", []):
+        await context.bot.send_message(chat_id=user_id, text=f"✨ {phrase}")
+    # Планируем следующее сообщение
+    schedule_next_inspiration(context.application)
+
 # main.py
 import logging
 from datetime import datetime, time
