@@ -310,7 +310,7 @@ async def handle_message(update: Update, context: CallbackContext):
   #          else:
   #              await update.message.reply_text("❗ Не удалось получить отчёт. Попробуй позже.", reply_markup=get_main_keyboard())
     elif text == "📊 Отчёт":
-    user_id = update.effective_user.id
+        user_id = update.effective_user.id
     await update.message.reply_text(
         "📊 Формирую твой отчёт...",
         reply_markup=get_main_keyboard()
