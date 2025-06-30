@@ -311,13 +311,13 @@ async def handle_message(update: Update, context: CallbackContext):
   #              await update.message.reply_text("❗ Не удалось получить отчёт. Попробуй позже.", reply_markup=get_main_keyboard())
     elif text == "📊 Отчёт":
         user_id = update.effective_user.id
-    await update.message.reply_text("📊 Формирую твой отчёт...")
-    try:
-        resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
-        if resp.status_code == 200:
-            raw_lines = resp.text.strip().split('\n')
-            parsed_lines = []
-            count_yes = count_partial = count_no = 0
+        await update.message.reply_text("📊 Формирую твой отчёт...")
+        try:
+            resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
+            if resp.status_code == 200:
+                raw_lines = resp.text.strip().split('\n')
+                parsed_lines = []
+                count_yes = count_partial = count_no = 0
 
             for line in raw_lines:
                 if line.startswith("📅 "):
@@ -342,12 +342,10 @@ async def handle_message(update: Update, context: CallbackContext):
 
             summary_text = "📊 Отчёт за 7 дней:\n" + "\n".join(parsed_lines) + f"""
 
-⭐ Выполнено полностью: {count_yes}
-🤏 Частично: {count_partial}
-🫠 Пропущено: {count_no}
-
-🔁 Не важно, сколько раз ты упал. Важно — сколько раз ты встал 💪
-"""
+        ⭐ Выполнено полностью: {count_yes}
+        🤏 Частично: {count_partial}
+        🫠 Пропущено: {count_no}
+       """
             await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
         
     except Exception as e:
@@ -410,11 +408,13 @@ async def auto_what_was_message(context: CallbackContext):
         workout = get_daily_workout()
         if workout:
             formatted = format_workout_with_guides(workout)
-            await context.bot.send_message(
-                chat_id=user_id,greeting = random.choice(morning_greetings)
-text = f"{greeting}\n\n{formatted}\nУдалось выполнить?",
-                reply_markup=get_response_keyboard()
-            )
+            greeting = random.choice(morning_greetings)
+text = f"{greeting}\n\n{formatted}\nУдалось выполнить?"
+await context.bot.send_message(
+    chat_id=user_id,
+    text=text,
+    reply_markup=get_response_keyboard()
+)
             context.user_data["workout"] = workout
             context.user_data["date"] = datetime.now().strftime("%Y-%m-%d")
             context.user_data["type"] = "плановая"
