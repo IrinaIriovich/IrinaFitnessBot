@@ -317,47 +317,47 @@ async def handle_message(update: Update, context: CallbackContext):
     )
 
     try:
-    resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
-    if resp.status_code == 200:
-        raw_lines = resp.text.strip().split("\n")
-        daily_lines = []
-        count_yes = count_partial = count_no = 0
+        resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
+        if resp.status_code == 200:
+            raw_lines = resp.text.strip().split("\n")
+            daily_lines = []
+            count_yes = count_partial = count_no = 0
     
-        for line in raw_lines:
-            if line.startswith("20"):
-                parts = line.split("\t")
-                date = parts[0].replace("-", ".")
-                status = parts[-1].strip().lower()
+            for line in raw_lines:
+                if line.startswith("20"):
+                    parts = line.split("\t")
+                    date = parts[0].replace("-", ".")
+                    status = parts[-1].strip().lower()
 
-                symbols = ""
-                if "да" in status:
-                    symbols += "⭐"
-                    count_yes += 1
-                if "частично" in status:
-                    symbols += "🤏"
-                    count_partial += 1
-                if "нет" in status:
-                    symbols += "🫠"
-                    count_no += 1
+                    symbols = ""
+                    if "да" in status:
+                        symbols += "⭐"
+                        count_yes += 1
+                    if "частично" in status:
+                        symbols += "🤏"
+                        count_partial += 1
+                    if "нет" in status:
+                        symbols += "🫠"
+                        count_no += 1
 
-                daily_lines.append(f"{date} — {symbols}")
+                    daily_lines.append(f"{date} — {symbols}")
 
-        daily_report = "\n".join(daily_lines)
+            daily_report = "\n".join(daily_lines)
 
-        summary_stats = f"""⭐ Выполнено полностью: {count_yes}
-    🤏 Частично: {count_partial}
-    🫠 Пропущено: {count_no}"""
+            summary_stats = f"""⭐ Выполнено полностью: {count_yes}
+        🤏 Частично: {count_partial}
+        🫠 Пропущено: {count_no}"""
 
         # Мотивация
-        if count_yes >= count_partial and count_yes >= count_no:
-            motivation = "💪 Ты молодец — стабильность — ключ к прогрессу!"
-        elif count_partial >= count_yes and count_partial >= count_no:
-            motivation = "🤏 Полдела — тоже дело. Главное — не останавливаться!"
-        else:
-            motivation = "🫠 Бывает. Главное — начать снова, и ты это умеешь!"
+            if count_yes >= count_partial and count_yes >= count_no:
+                motivation = "💪 Ты молодец — стабильность — ключ к прогрессу!"
+            elif count_partial >= count_yes and count_partial >= count_no:
+                motivation = "🤏 Полдела — тоже дело. Главное — не останавливаться!"
+            else:
+                motivation = "🫠 Бывает. Главное — начать снова, и ты это умеешь!"
 
-        final_report = f"📊 Отчёт за 7 дней:\n{daily_report}\n\n{summary_stats}\n\n{motivation}"
-        await update.message.reply_text(final_report, reply_markup=get_main_keyboard())
+            final_report = f"📊 Отчёт за 7 дней:\n{daily_report}\n\n{summary_stats}\n\n{motivation}"
+            await update.message.reply_text(final_report, reply_markup=get_main_keyboard())
 
     except Exception as e:
         logging.error(f"Ошибка при формировании отчёта: {e}")
