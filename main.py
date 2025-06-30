@@ -310,29 +310,33 @@ async def handle_message(update: Update, context: CallbackContext):
   #          else:
   #              await update.message.reply_text("❗ Не удалось получить отчёт. Попробуй позже.", reply_markup=get_main_keyboard())
     elif text == "📊 Отчёт":
-        user_id = update.effective_user.id
-        await update.message.reply_text("📊 Формирую твой отчёт...")
-        try:
-            resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
-            if resp.status_code == 200:
-                raw_lines = resp.text.strip().split('\n')
-                parsed_lines = []
-                count_yes = count_partial = count_no = 0
+    user_id = update.effective_user.id
+    await update.message.reply_text(
+        "📊 Формирую твой отчёт...",
+        reply_markup=get_main_keyboard()
+    )
+
+    try:
+        resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
+        if resp.status_code == 200:
+            raw_lines = resp.text.strip().split("\n")
+            parsed_lines = []
+            count_yes = count_partial = count_no = 0
 
             for line in raw_lines:
-                if line.startswith("📅 "):
-                    parts = line.split("—")
-                    date = parts[0].replace("📅", "").strip()
-                    status = parts[-1].strip().lower()
+                if line.startswith("20"):
+                    parts = line.split("\t")
+                    date = parts[0].replace("-", ".")
+                    status = parts[-1].strip()
 
                     symbols = ""
-                    if "да" in status or "✅" in status:
+                    if "да" in status.lower():
                         symbols += "⭐"
                         count_yes += 1
-                    if "частично" in status or "⚠️" in status:
+                    if "частично" in status.lower():
                         symbols += "🤏"
                         count_partial += 1
-                    if "нет" in status or "🚫" in status:
+                    if "нет" in status.lower():
                         symbols += "🫠"
                         count_no += 1
 
@@ -340,23 +344,24 @@ async def handle_message(update: Update, context: CallbackContext):
                 else:
                     parsed_lines.append(line)
 
-            summary_text = "📊 Отчёт за 7 дней:\n" + "\n".join(parsed_lines) + f"""
+            summary_text = f"""📊 Отчёт за 7 дней:
+{chr(10).join(parsed_lines)}
 
-        ⭐ Выполнено полностью: {count_yes}
-        🤏 Частично: {count_partial}
-        🫠 Пропущено: {count_no}
-       """
+⭐ Выполнено полностью: {count_yes}
+🤏 Частично: {count_partial}
+🫠 Пропущено: {count_no}
+
+🔁 Не важно, сколько раз ты упал. Важно — сколько раз ты встал 💪
+"""
             await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
-            
-    elif text == "🫶 Настройся на себя":
-        practice = random.choice(MICRO_PRACTICES)
+    except Exception as e:
+        logging.error(f"Ошибка при формировании отчёта: {e}")
         await update.message.reply_text(
-            f"Попробуй прямо сейчас:\n\n{practice}",
-    reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("📍 Я здесь", callback_data="support_done")],
-            [InlineKeyboardButton("👣 Ещё один шаг к себе", callback_data="more_practice")]
-            ])
+            "⚠️ Возникла ошибка при формировании отчёта. Попробуйте позже.",
+            reply_markup=get_main_keyboard()
         )
+
+# Инициализация
 # Инициализация
 async def handle_callback(update: Update, context: CallbackContext):
     query = update.callback_query
