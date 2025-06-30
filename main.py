@@ -344,16 +344,23 @@ async def handle_message(update: Update, context: CallbackContext):
                 else:
                     parsed_lines.append(line)
 
-            summary_text = f"""📊 Отчёт за 7 дней:
-{chr(10).join(parsed_lines)}
+            summary_lines = "\n".join(parsed_lines)
 
-⭐ Выполнено полностью: {count_yes}
-🤏 Частично: {count_partial}
-🫠 Пропущено: {count_no}
+            summary_stats = f"""⭐ Выполнено полностью: {count_yes}
+            🤏 Частично: {count_partial}
+            🫠 Пропущено: {count_no}"""
 
-🔁 Не важно, сколько раз ты упал. Важно — сколько раз ты встал 💪
-"""
-            await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
+            # Выбор мотивации по результатам
+            if count_yes >= count_partial and count_yes >= count_no:
+                motivation = "💪 Ты молодец — стабильность — ключ к прогрессу!"
+            elif count_partial >= count_yes and count_partial >= count_no:
+                motivation = "🤏 Полдела — тоже дело. Главное — не останавливаться!"
+            else:
+                motivation = "🫠 Бывает. Главное — начать снова, и ты это умеешь!"
+
+            final_report = f"📊 Отчёт за 7 дней:\n{summary_lines}\n\n{summary_stats}\n\n{motivation}"
+            await update.message.reply_text(final_report, reply_markup=get_main_keyboard())
+
     except Exception as e:
         logging.error(f"Ошибка при формировании отчёта: {e}")
         await update.message.reply_text(
