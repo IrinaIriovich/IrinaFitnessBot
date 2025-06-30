@@ -300,16 +300,57 @@ async def handle_message(update: Update, context: CallbackContext):
         else:
             msg = random.choice(replies_negative)
         await update.message.reply_text(msg, reply_markup=get_main_keyboard())
+  #  elif text == "📊 Отчёт":
+  #      user_id = update.effective_user.id
+  #      await update.message.reply_text("📊 Формирую твой отчёт...")
+  #      try:
+  #          resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
+  #          if resp.status_code == 200:
+  #              await update.message.reply_text(resp.text, reply_markup=get_main_keyboard())
+  #          else:
+  #              await update.message.reply_text("❗ Не удалось получить отчёт. Попробуй позже.", reply_markup=get_main_keyboard())
     elif text == "📊 Отчёт":
-        user_id = update.effective_user.id
-        await update.message.reply_text("📊 Формирую твой отчёт...")
-        try:
-            resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
-            if resp.status_code == 200:
-                await update.message.reply_text(resp.text, reply_markup=get_main_keyboard())
-            else:
-                await update.message.reply_text("❗ Не удалось получить отчёт. Попробуй позже.", reply_markup=get_main_keyboard())
-        except Exception as e:
+    user_id = update.effective_user.id
+    await update.message.reply_text("📊 Формирую твой отчёт...")
+    try:
+        resp = requests.get(GOOGLE_SCRIPT_URL, params={"action": "report", "user_id": user_id}, timeout=10)
+        if resp.status_code == 200:
+            raw_lines = resp.text.strip().split('\n')
+            parsed_lines = []
+            count_yes = count_partial = count_no = 0
+
+            for line in raw_lines:
+                if line.startswith("📅 "):
+                    parts = line.split("—")
+                    date = parts[0].replace("📅", "").strip()
+                    status = parts[-1].strip().lower()
+
+                    symbols = ""
+                    if "да" in status or "✅" in status:
+                        symbols += "⭐"
+                        count_yes += 1
+                    if "частично" in status or "⚠️" in status:
+                        symbols += "🤏"
+                        count_partial += 1
+                    if "нет" in status or "🚫" in status:
+                        symbols += "🫠"
+                        count_no += 1
+
+                    parsed_lines.append(f"{date} — {symbols}")
+                else:
+                    parsed_lines.append(line)
+
+            summary_text = "📊 Отчёт за 7 дней:\n" + "\n".join(parsed_lines) + f"""
+
+⭐ Выполнено полностью: {count_yes}
+🤏 Частично: {count_partial}
+🫠 Пропущено: {count_no}
+
+🔁 Не важно, сколько раз ты упал. Важно — сколько раз ты встал 💪
+"""
+            await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
+        
+    except Exception as e:
             logging.error(f"Ошибка при получении отчёта: {e}")
             await update.message.reply_text(
     "⚠️ Возникла ошибка при формировании отчёта. Нажми на кнопку в меню.",
