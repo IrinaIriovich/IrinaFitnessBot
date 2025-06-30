@@ -347,11 +347,7 @@ async def handle_message(update: Update, context: CallbackContext):
         🫠 Пропущено: {count_no}
        """
             await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
-        
-    except Exception as e:
-            logging.error(f"Ошибка при получении отчёта: {e}")
-            await update.message.reply_text(
-    "⚠️ Возникла ошибка при формировании отчёта. Нажми на кнопку в меню.",
+  
     reply_markup=get_main_keyboard()
             )
     elif text == "🫶 Настройся на себя":
