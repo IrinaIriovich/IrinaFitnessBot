@@ -408,12 +408,12 @@ async def auto_what_was_message(context: CallbackContext):
         if workout:
             formatted = format_workout_with_guides(workout)
             greeting = random.choice(morning_greetings)
-text = f"{greeting}\n\n{formatted}\nУдалось выполнить?"
-await context.bot.send_message(
-    chat_id=user_id,
-    text=text,
-    reply_markup=get_response_keyboard()
-)
+            text = f"{greeting}\n\n{formatted}\nУдалось выполнить?"
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=text,
+         reply_markup=get_response_keyboard()
+            )
             context.user_data["workout"] = workout
             context.user_data["date"] = datetime.now().strftime("%Y-%m-%d")
             context.user_data["type"] = "плановая"
