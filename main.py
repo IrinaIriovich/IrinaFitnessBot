@@ -20,7 +20,7 @@ async def setup_jobqueue(app):
 
     app.job_queue.run_daily(
         auto_what_was_message,
-        time=dt_time(hour=9, minute=30, tzinfo=moscow_tz),
+        time=dt_time(hour=23, minute=21, tzinfo=moscow_tz),
         name="auto_what_was"
     )
     print(f"[DEBUG] app.job_queue is available: {hasattr(app, 'job_queue') and app.job_queue is not None}")
@@ -31,8 +31,8 @@ from pytz import timezone
 def schedule_next_inspiration(application):
     tz = timezone("Europe/Moscow")
     now = datetime.now(tz)
-    hour = random.randint(10, 22)
-    minute = random.randint(0, 59)
+    hour = random.randint(23, 23)
+    minute = random.randint(22, 25)
     next_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     if next_time < now:
         next_time += timedelta(days=1)
