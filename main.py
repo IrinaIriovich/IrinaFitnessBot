@@ -346,8 +346,8 @@ async def handle_message(update: Update, context: CallbackContext):
         🤏 Частично: {count_partial}
         🫠 Пропущено: {count_no}
        """
-            await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
-            reply_markup=get_main_keyboard()
+                await update.message.reply_text(summary_text, reply_markup=get_main_keyboard())
+            
     elif text == "🫶 Настройся на себя":
         practice = random.choice(MICRO_PRACTICES)
         await update.message.reply_text(
