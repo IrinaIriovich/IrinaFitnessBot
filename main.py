@@ -356,9 +356,8 @@ async def handle_message(update: Update, context: CallbackContext):
             else:
                 motivation = "🫠 Бывает. Главное — начать снова, и ты это умеешь!"
 
-            final_report = f"📊 Отчёт за 7 дней:\n{daily_report}\n\n{summary_stats}\n\n{motivation}"
-            await update.message.reply_text(final_report, reply_markup=get_main_keyboard())
-
+            elif text == "📊 Отчёт":
+                
     except Exception as e:
         logging.error(f"Ошибка при формировании отчёта: {e}")
         await update.message.reply_text(
