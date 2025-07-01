@@ -33,7 +33,7 @@ async def setup_jobqueue(app):
     # Расписание утреннего сообщения
     app.job_queue.run_daily(
         auto_what_was_message,
-        time=dt_time(hour=6, minute=30),
+        time=dt_time(hour=22, minute=35),
         name="auto_what_was"
     )
 
@@ -183,9 +183,9 @@ def get_random_workout():
 def get_response_keyboard():
     keyboard = [
         [
-            InlineKeyboardButton("✅ Да", callback_data="response_да"),
-            InlineKeyboardButton("🟡 Частично", callback_data="response_частично"),
-            InlineKeyboardButton("❌ Нет", callback_data="response_нет"),
+            InlineKeyboardButton("⭐ Да", callback_data="response_да"),
+            InlineKeyboardButton("🤏 Частично", callback_data="response_частично"),
+            InlineKeyboardButton("🫠 Нет", callback_data="response_нет"),
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
