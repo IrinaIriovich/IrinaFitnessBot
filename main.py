@@ -33,7 +33,7 @@ async def setup_jobqueue(app):
     # Расписание утреннего сообщения
     app.job_queue.run_daily(
         auto_what_was_message,
-        time=dt_time(hour=22, minute=35),
+        time=dt_time(hour=6, minute=30),
         name="auto_what_was"
     )
 
