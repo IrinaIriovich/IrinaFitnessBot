@@ -406,15 +406,12 @@ async def show_users(update: Update, context: CallbackContext):
     except FileNotFoundError:
         await update.message.reply_text("📭 Файл users.txt пока не создан.")
 
-# Регистрация команды в main():
-application.add_handler(CommandHandler("users", show_users))
-
 def main():
     application = Application.builder()\
         .token("7820484983:AAFy1bXpU8Zx0tvJCtOhgaIeYRKI6YL9WCg")\
         .post_init(setup_jobqueue)\
         .build()
-
+    application.add_handler(CommandHandler("users", show_users))
     application.bot_data["users"] = load_users()
     
     application.add_handler(CommandHandler("start", start))
