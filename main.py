@@ -2,6 +2,22 @@ from keep_alive import keep_alive
 from telegram.ext import ContextTypes
 from datetime import datetime, timedelta, timezone, time as dt_time
 import random
+
+# 📁 Работа с файлом пользователей
+def load_users():
+    try:
+        with open("users.txt", "r") as f:
+            return set(map(int, f.read().splitlines()))
+    except FileNotFoundError:
+        return set()
+
+def save_user(user_id):
+    try:
+        with open("users.txt", "a") as f:
+            f.write(f"{user_id}\n")
+    except Exception as e:
+        print(f"[ERROR] Не удалось сохранить user_id: {e}")
+
 # 💬 Функция отправки вдохновения
 async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
     phrase = random.choice(inspiration_phrases)
@@ -237,9 +253,13 @@ async def evening_message(context: CallbackContext):
 async def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     if "users" not in context.bot_data:
-        context.bot_data["users"] = set()
-    context.bot_data["users"].add(user_id)
-    await update.message.reply_text("Привет! Готова к тренировке? 💪", reply_markup=get_main_keyboard())
+        context.bot_data["users"] = load_users()
+
+    if user_id not in context.bot_data["users"]:
+        context.bot_data["users"].add(user_id)
+        save_user(user_id)
+
+    await update.message.reply_text("Привет! Спорт — это не только про форму. Это про внимание, дыхание и выбор быть с собой. 🧘 Начнём? ", reply_markup=get_main_keyboard())
 # Обработка сообщений
 async def handle_message(update: Update, context: CallbackContext):
     text = update.message.text
@@ -376,6 +396,8 @@ def main():
         .token("7820484983:AAFy1bXpU8Zx0tvJCtOhgaIeYRKI6YL9WCg")\
         .post_init(setup_jobqueue)\
         .build()
+
+    application.bot_data["users"] = load_users()
     
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
