@@ -259,7 +259,7 @@ async def start(update: Update, context: CallbackContext):
         context.bot_data["users"].add(user_id)
         save_user(user_id)
 
-    await update.message.reply_text("Привет! Спорт — это не только про форму. Это про внимание, дыхание и выбор быть с собой. 🧘 Начнём? ", reply_markup=get_main_keyboard())
+    await update.message.reply_text("Привет! Спорт — это не только про форму. Это про внимание, дыхание и выбор быть с собой.\n🧘‍♀️ Начнём? ", reply_markup=get_main_keyboard())
 # Обработка сообщений
 async def handle_message(update: Update, context: CallbackContext):
     text = update.message.text
@@ -390,6 +390,24 @@ async def auto_what_was_message(context: CallbackContext):
             context.user_data["date"] = datetime.now().strftime("%Y-%m-%d")
             context.user_data["type"] = "плановая"
 from telegram.ext import ApplicationBuilder, JobQueue
+
+async def show_users(update: Update, context: CallbackContext):
+    if update.effective_user.id != 191224401:
+        await update.message.reply_text("⛔ У тебя нет доступа к этому списку.")
+        return
+
+    try:
+        with open("users.txt", "r") as f:
+            users = f.read().strip().splitlines()
+            if not users:
+                await update.message.reply_text("📭 Пока что список пользователей пуст.")
+            else:
+                await update.message.reply_text(f"👥 Пользователи:\n" + "\n".join(users))
+    except FileNotFoundError:
+        await update.message.reply_text("📭 Файл users.txt пока не создан.")
+
+# Регистрация команды в main():
+application.add_handler(CommandHandler("users", show_users))
 
 def main():
     application = Application.builder()\
