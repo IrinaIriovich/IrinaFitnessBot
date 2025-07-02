@@ -39,8 +39,9 @@ async def setup_jobqueue(app):
 
     # Расписание вдохновляющего сообщения
     schedule_inspiration_job(app)
-    if not hasattr(app, "job_queue") or app.job_queue is None:
-        schedule_inspiration_job(app.job_queue)
+        await delayed_morning_if_missed(app)
+        if not hasattr(app, "job_queue") or app.job_queue is None:
+            schedule_inspiration_job(app.job_queue)
     
     print(f"[DEBUG] app.job_queue is available: {hasattr(app, 'job_queue') and app.job_queue is not None}")
 # ⏰ Планировщик с рандомным временем (10:00–23:00) по Москве
@@ -376,19 +377,6 @@ async def handle_callback(update: Update, context: CallbackContext):
             ])
         )
 # Автоматическое сообщение "Что было" в 9:45
-async def auto_what_was_message(context: CallbackContext):
-    for user_id in context.bot_data.get("users", []):
-        workout = get_daily_workout()
-        if workout:
-            formatted = format_workout_with_guides(workout)
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=f"Сегодняшняя тренировка:\n{formatted}\nУдалось выполнить?",
-                reply_markup=get_response_keyboard()
-            )
-            context.user_data["workout"] = workout
-            context.user_data["date"] = datetime.now().strftime("%Y-%m-%d")
-            context.user_data["type"] = "плановая"
 from telegram.ext import ApplicationBuilder, JobQueue
 
 async def show_users(update: Update, context: CallbackContext):
