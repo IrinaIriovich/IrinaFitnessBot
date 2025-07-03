@@ -32,18 +32,17 @@ async def setup_jobqueue(app):
 
     # Расписание утреннего сообщения
     app.job_queue.run_daily(
-        auto_what_was_message,
+        morning_message,
         time=dt_time(hour=6, minute=30),
-        name="auto_what_was"
+        name="auto_morning"
     )
-
-    # Расписание вдохновляющего сообщения
-    schedule_inspiration_job(app)
-    await delayed_morning_if_missed(app)
-    if not hasattr(app, "job_queue") or app.job_queue is None:
-        schedule_inspiration_job(app.job_queue)
     
+    schedule_inspiration_job(app)
+
+    await delayed_morning_if_missed(app)
+
     print(f"[DEBUG] app.job_queue is available: {hasattr(app, 'job_queue') and app.job_queue is not None}")
+
 # ⏰ Планировщик с рандомным временем (10:00–23:00) по Москве
 def schedule_inspiration_job(application):
     # Случайное время между 10:00 и 23:00
