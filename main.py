@@ -239,17 +239,7 @@ def send_to_gsheet(user_id, date_str, workout_type, response):
             logging.warning(f"Не удалось отправить в Google Таблицу: код {response_post.status_code}")
     except Exception as e:
         logging.error(f"Ошибка при отправке в Google Таблицу: {e}")
-# Утреннее сообщение
-async def morning_message(context: CallbackContext):
-    for user_id in context.bot_data.get("users", []):
-        workout = get_daily_workout()
-        if workout:
-            formatted = "\n".join([f"{i+1}. {w}" for i, w in enumerate(workout)])
-            await context.bot.send_message(chat_id=user_id, text=f"Твоя тренировка на сегодня 🏋️:\n{formatted}\nУдалось выполнить?")
-# Вечернее сообщение
-async def evening_message(context: CallbackContext):
-    for user_id in context.bot_data.get("users", []):
-        await context.bot.send_message(chat_id=user_id, text="Удалось ли сегодня потренироваться? (да / частично / нет)")
+
 # Команда старт
 async def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
