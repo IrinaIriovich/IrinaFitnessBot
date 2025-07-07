@@ -18,6 +18,17 @@ def save_user(user_id):
     except Exception as e:
         print(f"[ERROR] Не удалось сохранить user_id: {e}")
 
+async def morning_message(context: ContextTypes.DEFAULT_TYPE):
+    users = context.bot_data.get("users", set())
+    for user_id in users:
+        workout = get_daily_workout()
+        if workout:
+            formatted = format_workout_with_guides(workout)
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=f"🏋️ Тренировка дня:\n{formatted}\nУдалось выполнить?",
+                reply_markup=get_response_keyboard()
+            )
 # 💬 Функция отправки вдохновения
 async def send_random_inspiration(context: ContextTypes.DEFAULT_TYPE):
     phrase = random.choice(inspiration_phrases)
