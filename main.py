@@ -396,7 +396,7 @@ async def show_users(update: Update, context: CallbackContext):
 
 def main():
     application = Application.builder()\
-        .token("7820484983:AAFy1bXpU8Zx0tvJCtOhgaIeYRKI6YL9WCg")\
+        .token("7820484983:AAEQsBXy61eE84IWZCw5V7VQdTX7y2P1sCM")\
         .post_init(setup_jobqueue)\
         .build()
     application.add_handler(CommandHandler("users", show_users))
