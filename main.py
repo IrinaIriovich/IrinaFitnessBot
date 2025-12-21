@@ -483,10 +483,10 @@ async def show_users(update: Update, context: CallbackContext):
 
 
 # =========================
-# MAIN
+# BUILD APP (для webhook через app.py)
 # =========================
 
-def main():
+def build_application() -> Application:
     token = os.getenv("BOT_TOKEN")
     if not token:
         raise RuntimeError("BOT_TOKEN is not set in environment variables")
@@ -505,18 +505,11 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(CallbackQueryHandler(handle_callback))
 
-    logger.info("Bot is starting (polling)...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    return application
 
 
+# Локальный запуск (polling) — только если запускаешь вручную python main.py
 if __name__ == "__main__":
-    main()
-Что именно я исправил (коротко)
-Убрал keep_alive() (на Render он не нужен и часто мешает).
-Добавил import os + жёсткую проверку BOT_TOKEN (чтобы не “молчал”).
-Убрал вызов несуществующей delayed_morning_if_missed.
-Сделал расписание по Москве через ZoneInfo("Europe/Moscow").
-Починил “тип тренировки” для утренних авто-сообщений, чтобы кнопки Да/Частично/Нет записывались в таблицу не как неизвестно.
-Важно для Render
-Запускай это как Background Worker со старт-командой: python main.py
-Если хочешь — скажи, какой у тебя сейчас requirements.txt (или скинь его), я подскажу, что там должно быть, чтобы zoneinfo/PTB стабильно встали.
+    app = build_application()
+    logger.info("Bot is starting (polling)...")
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
