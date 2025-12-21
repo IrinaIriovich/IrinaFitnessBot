@@ -1,4 +1,3 @@
-# app.py
 import os
 import asyncio
 import logging
@@ -14,19 +13,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render задаёт автоматически
+PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL")
 
-# ВАЖНО: не используем токен в URL
-WEBHOOK_PATH = "/webhook"
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN is not set")
+if not PUBLIC_URL:
+    raise RuntimeError("RENDER_EXTERNAL_URL is not set")
+
+WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
 WEBHOOK_URL = f"{PUBLIC_URL}{WEBHOOK_PATH}"
 
 app = Flask(__name__)
 
 tg_app: Application | None = None
-
-# отдельный event loop для PTB, чтобы не конфликтовать с Flask/gunicorn
 loop: asyncio.AbstractEventLoop | None = None
-loop_thread: threading.Thread | None = None
 
 
 @app.get("/")
@@ -36,53 +36,45 @@ def health():
 
 @app.post(WEBHOOK_PATH)
 def webhook():
-    global tg_app, loop
     if tg_app is None or loop is None:
         return "not ready", 503
 
-    update_json = request.get_json(force=True, silent=True) or {}
-    update = Update.de_json(update_json, tg_app.bot)
+    data = request.get_json(force=True, silent=True) or {}
+    update = Update.de_json(data, tg_app.bot)
 
-    # НЕ asyncio.run() — отправляем корутину в постоянный loop
-    asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
+    asyncio.run_coroutine_threadsafe(
+        tg_app.process_update(update),
+        loop
+    )
     return "ok", 200
 
 
-def _run_loop_forever():
+def start_loop():
     global loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
 
-def init():
-    global tg_app, loop_thread, loop
+def init_bot():
+    global tg_app
 
-    if not BOT_TOKEN:
-        raise RuntimeError("BOT_TOKEN is not set")
-    if not PUBLIC_URL:
-        raise RuntimeError("RENDER_EXTERNAL_URL is not set")
+    thread = threading.Thread(target=start_loop, daemon=True)
+    thread.start()
 
-    # поднимаем loop в отдельном потоке один раз
-    loop_thread = threading.Thread(target=_run_loop_forever, daemon=True)
-    loop_thread.start()
-
-    # ждём пока loop поднимется
     while loop is None:
         pass
 
     tg_app = build_application()
 
-    async def _async_init():
+    async def _init():
         await tg_app.initialize()
-        # Можно очистить старый webhook на всякий случай
-        await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        await tg_app.bot.set_webhook(url=WEBHOOK_URL)
+        await tg_app.bot.set_webhook(WEBHOOK_URL)
         await tg_app.start()
-        logger.info(f"Webhook set to: {WEBHOOK_URL}")
+        logger.info(f"Webhook set to {WEBHOOK_URL}")
 
-    asyncio.run_coroutine_threadsafe(_async_init(), loop)
+    asyncio.run_coroutine_threadsafe(_init(), loop)
 
 
-# Инициализируем при старте процесса gunicorn
-init()
+# Инициализация при старте gunicorn
+init_bot()
