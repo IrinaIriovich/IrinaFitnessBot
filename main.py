@@ -507,9 +507,3 @@ def build_application() -> Application:
 
     return application
 
-
-# Локальный запуск (polling) — только если запускаешь вручную python main.py
-if __name__ == "__main__":
-    app = build_application()
-    logger.info("Bot is starting (polling)...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
