@@ -395,9 +395,10 @@ async def show_users(update: Update, context: CallbackContext):
         await update.message.reply_text("📭 Файл users.txt пока не создан.")
 
 def main():
-    application = Application.builder()\
-        .token("7820484983:AAGsAhYKykOW-Q3TOPv99ydLaezAf5_5GYo")\
-        .post_init(setup_jobqueue)\
+    application = (
+        Application.builder()
+        .token(os.getenv("BOT_TOKEN"))
+        .post_init(setup_jobqueue)
         .build()
     application.add_handler(CommandHandler("users", show_users))
     application.bot_data["users"] = load_users()
