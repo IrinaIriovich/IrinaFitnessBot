@@ -37,7 +37,10 @@ def health():
 
 @app.get("/debug-webhook")
 def debug_webhook():
-    return {"webhook_url": WEBHOOK_URL, "ready": tg_app is not None and loop is not None}, 200
+    return {
+        "webhook_url": WEBHOOK_URL,
+        "ready": tg_app is not None and loop is not None,
+    }, 200
 
 
 @app.post(WEBHOOK_PATH)
@@ -62,6 +65,7 @@ def webhook():
 
     fut = asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
 
+    # ВАЖНО: иначе исключения в обработчиках молча теряются, и бот “не отвечает”
     def _done_callback(f):
         try:
             f.result()
@@ -94,11 +98,24 @@ def init_bot():
 
     async def _init():
         await tg_app.initialize()
-        await tg_app.bot.set_webhook(url=WEBHOOK_URL)
+
+        # полезно при переездах, чтобы не копились старые апдейты
+        await tg_app.bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
+
         await tg_app.start()
         logger.info(f"Webhook set to {WEBHOOK_URL}")
 
-    asyncio.run_coroutine_threadsafe(_init(), loop)
+    fut = asyncio.run_coroutine_threadsafe(_init(), loop)
+
+    # тоже логируем возможный фейл инициализации
+    def _init_done(f):
+        try:
+            f.result()
+        except Exception:
+            logger.exception("Bot init failed")
+
+    fut.add_done_callback(_init_done)
 
 
+# Инициализация при старте gunicorn
 init_bot()
