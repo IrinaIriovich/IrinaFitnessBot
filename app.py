@@ -1,3 +1,4 @@
+# app.py
 import os
 import asyncio
 import logging
@@ -13,15 +14,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render сам задаёт
-WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
+PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render задаёт автоматически
+
+# ВАЖНО: не используем токен в URL
+WEBHOOK_PATH = "/webhook"
 WEBHOOK_URL = f"{PUBLIC_URL}{WEBHOOK_PATH}"
 
 app = Flask(__name__)
 
 tg_app: Application | None = None
 
-# отдельный event loop для PTB (чтобы не драться с Flask/gunicorn)
+# отдельный event loop для PTB, чтобы не конфликтовать с Flask/gunicorn
 loop: asyncio.AbstractEventLoop | None = None
 loop_thread: threading.Thread | None = None
 
@@ -40,7 +43,7 @@ def webhook():
     update_json = request.get_json(force=True, silent=True) or {}
     update = Update.de_json(update_json, tg_app.bot)
 
-    # ВАЖНО: не asyncio.run(), а отправка в наш loop
+    # НЕ asyncio.run() — отправляем корутину в постоянный loop
     asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
     return "ok", 200
 
@@ -60,7 +63,7 @@ def init():
     if not PUBLIC_URL:
         raise RuntimeError("RENDER_EXTERNAL_URL is not set")
 
-    # стартуем loop в отдельном потоке 1 раз
+    # поднимаем loop в отдельном потоке один раз
     loop_thread = threading.Thread(target=_run_loop_forever, daemon=True)
     loop_thread.start()
 
@@ -72,6 +75,8 @@ def init():
 
     async def _async_init():
         await tg_app.initialize()
+        # Можно очистить старый webhook на всякий случай
+        await tg_app.bot.delete_webhook(drop_pending_updates=True)
         await tg_app.bot.set_webhook(url=WEBHOOK_URL)
         await tg_app.start()
         logger.info(f"Webhook set to: {WEBHOOK_URL}")
@@ -79,5 +84,5 @@ def init():
     asyncio.run_coroutine_threadsafe(_async_init(), loop)
 
 
-# Важно: делаем init при старте процесса
+# Инициализируем при старте процесса gunicorn
 init()
