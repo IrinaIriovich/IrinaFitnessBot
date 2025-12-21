@@ -400,6 +400,7 @@ def main():
         .token(os.getenv("BOT_TOKEN"))
         .post_init(setup_jobqueue)
         .build()
+    ) 
     application.add_handler(CommandHandler("users", show_users))
     application.bot_data["users"] = load_users()
     
