@@ -2,8 +2,6 @@ import os
 import asyncio
 import logging
 import threading
-from typing import Optional
-
 from flask import Flask, request
 
 from telegram import Update
@@ -15,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render задаёт сам
+PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL")  # Render выставляет сам
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN is not set")
@@ -27,8 +25,8 @@ WEBHOOK_URL = f"{PUBLIC_URL}{WEBHOOK_PATH}"
 
 app = Flask(__name__)
 
-tg_app: Optional[Application] = None
-loop: Optional[asyncio.AbstractEventLoop] = None
+tg_app: Application | None = None
+loop: asyncio.AbstractEventLoop | None = None
 loop_ready = threading.Event()
 
 
@@ -42,30 +40,39 @@ def webhook():
     global tg_app, loop
 
     if tg_app is None or loop is None:
-        logger.warning("WEBHOOK: not ready yet")
+        logger.warning("Webhook received but bot/loop not ready yet")
         return "not ready", 503
 
-    data = request.get_json(force=True, silent=True) or {}
-    logger.info(f"WEBHOOK IN: keys={list(data.keys())}")
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        logger.warning("Empty JSON received on webhook")
+        return "bad request", 400
 
     try:
         update = Update.de_json(data, tg_app.bot)
+    except Exception:
+        logger.exception("Failed to parse Update from JSON")
+        return "bad update", 400
 
-        fut = asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
+    fut = asyncio.run_coroutine_threadsafe(_process_update_safe(update), loop)
+    # можно не ждать результата, но полезно логировать, если упадёт
+    def _done_callback(f):
+        try:
+            f.result()
+        except Exception:
+            logger.exception("process_update crashed")
+    fut.add_done_callback(_done_callback)
 
-        # Ловим любые исключения из обработки апдейта (иначе “молчит” без следов)
-        def _done_callback(f):
-            exc = f.exception()
-            if exc:
-                logger.exception("process_update failed", exc_info=exc)
+    return "ok", 200
 
-        fut.add_done_callback(_done_callback)
 
-        return "ok", 200
-
-    except Exception as e:
-        logger.exception(f"WEBHOOK handler crashed: {e}")
-        return "error", 500
+async def _process_update_safe(update: Update):
+    """Оборачиваем обработку апдейта, чтобы видеть исключения."""
+    assert tg_app is not None
+    try:
+        await tg_app.process_update(update)
+    except Exception:
+        logger.exception("Exception while processing update")
 
 
 def _run_loop_forever():
@@ -79,9 +86,8 @@ def _run_loop_forever():
 def init_bot():
     global tg_app, loop
 
-    # Один event loop в отдельном потоке
     threading.Thread(target=_run_loop_forever, daemon=True).start()
-    loop_ready.wait(timeout=15)
+    loop_ready.wait(timeout=10)
 
     if loop is None:
         raise RuntimeError("Event loop failed to start")
@@ -89,21 +95,21 @@ def init_bot():
     tg_app = build_application()
 
     async def _init():
-        # Полный жизненный цикл PTB
+        # 1) init PTB
         await tg_app.initialize()
 
-        # На всякий случай чистим старый вебхук и зависшие апдейты
+        # 2) сбросить старый вебхук и очередь (важно при “переездах”)
         await tg_app.bot.delete_webhook(drop_pending_updates=True)
-        await tg_app.bot.set_webhook(url=WEBHOOK_URL)
 
+        # 3) поставить новый вебхук
+        ok = await tg_app.bot.set_webhook(url=WEBHOOK_URL)
+        logger.info(f"Webhook set to {WEBHOOK_URL}, ok={ok}")
+
+        # 4) старт приложения
         await tg_app.start()
-        logger.info(f"Webhook set to {WEBHOOK_URL}")
 
-    fut = asyncio.run_coroutine_threadsafe(_init(), loop)
-
-    # Если тут ошибка — лучше упасть при старте, чем “тихо молчать”
-    fut.result(timeout=30)
+    asyncio.run_coroutine_threadsafe(_init(), loop)
 
 
-# Инициализация при импорте модуля gunicorn
+# Gunicorn import-time init
 init_bot()
