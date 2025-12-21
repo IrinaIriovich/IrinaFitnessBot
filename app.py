@@ -2,6 +2,8 @@ import os
 import asyncio
 import logging
 import threading
+from typing import Optional
+
 from flask import Flask, request
 
 from telegram import Update
@@ -25,8 +27,8 @@ WEBHOOK_URL = f"{PUBLIC_URL}{WEBHOOK_PATH}"
 
 app = Flask(__name__)
 
-tg_app: Application | None = None
-loop: asyncio.AbstractEventLoop | None = None
+tg_app: Optional[Application] = None
+loop: Optional[asyncio.AbstractEventLoop] = None
 loop_ready = threading.Event()
 
 
@@ -38,14 +40,32 @@ def health():
 @app.post(WEBHOOK_PATH)
 def webhook():
     global tg_app, loop
+
     if tg_app is None or loop is None:
+        logger.warning("WEBHOOK: not ready yet")
         return "not ready", 503
 
     data = request.get_json(force=True, silent=True) or {}
-    update = Update.de_json(data, tg_app.bot)
+    logger.info(f"WEBHOOK IN: keys={list(data.keys())}")
 
-    asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
-    return "ok", 200
+    try:
+        update = Update.de_json(data, tg_app.bot)
+
+        fut = asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
+
+        # Ловим любые исключения из обработки апдейта (иначе “молчит” без следов)
+        def _done_callback(f):
+            exc = f.exception()
+            if exc:
+                logger.exception("process_update failed", exc_info=exc)
+
+        fut.add_done_callback(_done_callback)
+
+        return "ok", 200
+
+    except Exception as e:
+        logger.exception(f"WEBHOOK handler crashed: {e}")
+        return "error", 500
 
 
 def _run_loop_forever():
@@ -59,9 +79,9 @@ def _run_loop_forever():
 def init_bot():
     global tg_app, loop
 
-    # стартуем отдельный loop один раз
+    # Один event loop в отдельном потоке
     threading.Thread(target=_run_loop_forever, daemon=True).start()
-    loop_ready.wait(timeout=10)
+    loop_ready.wait(timeout=15)
 
     if loop is None:
         raise RuntimeError("Event loop failed to start")
@@ -69,14 +89,21 @@ def init_bot():
     tg_app = build_application()
 
     async def _init():
+        # Полный жизненный цикл PTB
         await tg_app.initialize()
-        # можно добавить drop_pending_updates=True, если хочешь сбросить старые апдейты
+
+        # На всякий случай чистим старый вебхук и зависшие апдейты
+        await tg_app.bot.delete_webhook(drop_pending_updates=True)
         await tg_app.bot.set_webhook(url=WEBHOOK_URL)
+
         await tg_app.start()
         logger.info(f"Webhook set to {WEBHOOK_URL}")
 
-    asyncio.run_coroutine_threadsafe(_init(), loop)
+    fut = asyncio.run_coroutine_threadsafe(_init(), loop)
+
+    # Если тут ошибка — лучше упасть при старте, чем “тихо молчать”
+    fut.result(timeout=30)
 
 
-# Инициализация при старте gunicorn
+# Инициализация при импорте модуля gunicorn
 init_bot()
