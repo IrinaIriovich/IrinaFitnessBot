@@ -65,7 +65,6 @@ def webhook():
 
     fut = asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
 
-    # ВАЖНО: иначе исключения в обработчиках молча теряются, и бот “не отвечает”
     def _done_callback(f):
         try:
             f.result()
@@ -98,22 +97,18 @@ def init_bot():
 
     async def _init():
         await tg_app.initialize()
-
-        # полезно при переездах, чтобы не копились старые апдейты
         await tg_app.bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
-
         await tg_app.start()
         logger.info(f"Webhook set to {WEBHOOK_URL}")
 
     fut = asyncio.run_coroutine_threadsafe(_init(), loop)
 
-    # тоже логируем возможный фейл инициализации
-try:
-    fut.result(timeout=30)
-    logger.info("Bot fully initialized")
-except Exception:
-    logger.exception("Bot init failed")
-    raise
+    try:
+        fut.result(timeout=30)
+        logger.info("Bot fully initialized")
+    except Exception:
+        logger.exception("Bot init failed")
+        raise
 
 
 # Инициализация при старте gunicorn
