@@ -103,12 +103,11 @@ def init_bot():
 
     fut = asyncio.run_coroutine_threadsafe(_init(), loop)
 
-    try:
-        fut.result(timeout=30)
-        logger.info("Bot fully initialized")
-    except Exception:
-        logger.exception("Bot init failed")
-        raise
+    async def _process():
+        update = await Update.de_json(data, tg_app.bot)
+        await tg_app.process_update(update)
+
+    fut = asyncio.run_coroutine_threadsafe(_process(), loop)
 
 
 # Инициализация при старте gunicorn
