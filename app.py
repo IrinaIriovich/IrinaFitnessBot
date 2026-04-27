@@ -58,14 +58,15 @@ def webhook():
     logger.info(f"Incoming update keys: {list(data.keys())}")
 
     async def _process():
-        update = await Update.de_json(data, tg_app.bot)
-        await tg_app.process_update(update)
+        try:
+            update = await Update.de_json(data, tg_app.bot)
+            logger.info("Update parsed OK")
+            await tg_app.process_update(update)
+            logger.info("Update processed OK")
+        except Exception:
+            logger.exception("Error inside _process")
 
-    fut = asyncio.run_coroutine_threadsafe(_process(), loop)
-    try:
-        fut.result(timeout=10)
-    except Exception:
-        logger.exception("Exception while processing update")
+    asyncio.run_coroutine_threadsafe(_process(), loop)
 
     return "ok", 200
 
