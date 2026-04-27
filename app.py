@@ -108,13 +108,12 @@ def init_bot():
     fut = asyncio.run_coroutine_threadsafe(_init(), loop)
 
     # тоже логируем возможный фейл инициализации
-    def _init_done(f):
-        try:
-            f.result()
-        except Exception:
-            logger.exception("Bot init failed")
-
-    fut.add_done_callback(_init_done)
+try:
+    fut.result(timeout=30)
+    logger.info("Bot fully initialized")
+except Exception:
+    logger.exception("Bot init failed")
+    raise
 
 
 # Инициализация при старте gunicorn
