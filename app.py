@@ -57,13 +57,11 @@ def webhook():
 
     logger.info(f"Incoming update keys: {list(data.keys())}")
 
-    try:
-        update = Update.de_json(data, tg_app.bot)
-    except Exception:
-        logger.exception("Failed to parse Update.de_json")
-        return "bad update", 200
+    async def _process():
+        update = await Update.de_json(data, tg_app.bot)
+        await tg_app.process_update(update)
 
-    fut = asyncio.run_coroutine_threadsafe(tg_app.process_update(update), loop)
+    fut = asyncio.run_coroutine_threadsafe(_process(), loop)
 
     def _done_callback(f):
         try:
@@ -103,11 +101,12 @@ def init_bot():
 
     fut = asyncio.run_coroutine_threadsafe(_init(), loop)
 
-    async def _process():
-        update = await Update.de_json(data, tg_app.bot)
-        await tg_app.process_update(update)
-
-    fut = asyncio.run_coroutine_threadsafe(_process(), loop)
+    try:
+        fut.result(timeout=30)
+        logger.info("Bot fully initialized")
+    except Exception:
+        logger.exception("Bot init failed")
+        raise
 
 
 # Инициализация при старте gunicorn
