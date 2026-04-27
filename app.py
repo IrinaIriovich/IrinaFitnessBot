@@ -62,14 +62,10 @@ def webhook():
         await tg_app.process_update(update)
 
     fut = asyncio.run_coroutine_threadsafe(_process(), loop)
-
-    def _done_callback(f):
-        try:
-            f.result()
-        except Exception:
-            logger.exception("Exception while processing update")
-
-    fut.add_done_callback(_done_callback)
+    try:
+        fut.result(timeout=10)
+    except Exception:
+        logger.exception("Exception while processing update")
 
     return "ok", 200
 
