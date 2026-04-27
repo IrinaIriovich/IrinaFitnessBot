@@ -28,6 +28,7 @@ app = Flask(__name__)
 tg_app: Application | None = None
 loop: asyncio.AbstractEventLoop | None = None
 loop_ready = threading.Event()
+bot_ready = threading.Event()
 
 
 @app.get("/")
@@ -71,39 +72,35 @@ def webhook():
     return "ok", 200
 
 
+async def _run_bot():
+    global tg_app
+    tg_app = build_application()
+    await tg_app.initialize()
+    await tg_app.bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
+    await tg_app.start()
+    logger.info(f"Webhook set to {WEBHOOK_URL}")
+    bot_ready.set()
+    # держим цикл живым
+    await asyncio.Event().wait()
+
+
 def _run_loop_forever():
     global loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop_ready.set()
-    loop.run_forever()
+    loop.run_until_complete(_run_bot())
 
 
 def init_bot():
-    global tg_app, loop
-
     threading.Thread(target=_run_loop_forever, daemon=True).start()
     loop_ready.wait(timeout=10)
+    bot_ready.wait(timeout=30)
 
-    if loop is None:
-        raise RuntimeError("Event loop failed to start")
+    if tg_app is None:
+        raise RuntimeError("Bot failed to initialize")
 
-    tg_app = build_application()
-
-    async def _init():
-        await tg_app.initialize()
-        await tg_app.bot.set_webhook(url=WEBHOOK_URL, drop_pending_updates=True)
-        await tg_app.start()
-        logger.info(f"Webhook set to {WEBHOOK_URL}")
-
-    fut = asyncio.run_coroutine_threadsafe(_init(), loop)
-
-    try:
-        fut.result(timeout=30)
-        logger.info("Bot fully initialized")
-    except Exception:
-        logger.exception("Bot init failed")
-        raise
+    logger.info("Bot fully initialized")
 
 
 # Инициализация при старте gunicorn
