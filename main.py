@@ -494,7 +494,6 @@ def build_application() -> Application:
     application = (
         Application.builder()
         .token(token)
-        .updater(None)
         .post_init(setup_jobqueue)
         .build()
     )
